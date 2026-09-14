@@ -1,4 +1,4 @@
-setwd("~/Activité Professionnelle/LIMNO 2019-2023/Collaborations/Chapter 1 Richard - Isolates Trait Variation/Half Saturation")
+setwd("~/Activité Professionnelle/LIMNO Konstanz (2019-2023)/Collaborations/Chapter 1 Richard - Isolates Trait Variation/Half Saturation")
 
 rm(list=ls())
 
@@ -45,26 +45,26 @@ Data[,c(6:9,11:12)] %<>% mutate_if(is.integer,as.numeric)
 Data[,c(6:9,11:12)] %<>% mutate_if(is.factor,as.numeric)
 
 # Sort the dataset by isolate and nutrient treatments
-Data$Iso=factor(Data$Iso, levels=unique(Data$Iso))
+Data$Genotype=factor(Data$Genotype, levels=unique(Data$Genotype))
 Data$Species=factor(Data$Species, levels=unique(Data$Species))
 Data$Phos=factor(Data$Phos, levels=unique(Data$Phos))
-Data=Data[order(Data$Iso,Data$Phos,Data$Trial),]
+Data=Data[order(Data$Genotype,Data$Phos,Data$Trial),]
 
 # Calculate the densities
 Data$Dens=Data$IXM*Data$Volu*Data$Site*Data$Dilu*Data$Cove
 
 # Remove the outlier densities
-Data=as.data.frame(Data %>% group_by(Iso,Species,Phos,Day) %>% mutate(Dens=ifelse(Dens < mean(Dens)-2.0*sd(Dens), NA, Dens)))
-Data=as.data.frame(Data %>% group_by(Iso,Species,Phos,Day) %>% mutate(Dens=ifelse(Dens > mean(Dens)+2.0*sd(Dens), NA, Dens)))
+Data=as.data.frame(Data %>% group_by(Genotype,Species,Phos,Day) %>% mutate(Dens=ifelse(Dens < mean(Dens)-2.0*sd(Dens), NA, Dens)))
+Data=as.data.frame(Data %>% group_by(Genotype,Species,Phos,Day) %>% mutate(Dens=ifelse(Dens > mean(Dens)+2.0*sd(Dens), NA, Dens)))
 
 # Remove the decreasing densities
 Data=Data[Data$Day > 0,]
-MinDay=as.data.frame(subset(na.omit(Data), Day < 4) %>% group_by(Iso,Species,Phos,Trial) %>% slice(which.min(Dens)))$Day
+MinDay=as.data.frame(subset(na.omit(Data), Day < 4) %>% group_by(Genotype,Species,Phos,Trial) %>% slice(which.min(Dens)))$Day
 Data$MinDay=rep(MinDay, each=length(unique(Data$Day)))
-Data=Data %>% group_by(Iso,Species,Phos,Trial) %>% filter(Day >= MinDay) %>% ungroup
+Data=Data %>% group_by(Genotype,Species,Phos,Trial) %>% filter(Day >= MinDay) %>% ungroup
 
 # Calculate the mean densities
-Data2=setDT(Data)[, .(MeanDens=round(mean(Dens),0)), by=list(Iso,Species,Phos,Day)]
+Data2=setDT(Data)[, .(MeanDens=round(mean(Dens),0)), by=list(Genotype,Species,Phos,Day)]
 Data=as.data.frame(Data)
 Data2=as.data.frame(Data2)
 
@@ -130,162 +130,50 @@ FuncLo=function(Model,Day) {
 }
 
 
+############################
+### Cleaning the dataset ###
+############################
+
+# Create vectors of outliers
+Genotype=c("CN11","CN11","CN11","CN12","CN14","CN14","CN14","CN17","CN19","CN19","CB12","CB14","CB15","CB15","CB21","CB21","CB22","CB22","CN3","CN3","CN14","CN24","CN24","CN24","CN24","CB8","CB8","CB12","CB14","CB22","CN1","CN1",
+      "CN3","CN7","CN7","CN7","CN10","CN11","CN24","CB5","CB5","CB5","CB14","CB14","CB14","CB22","CB22","CB22","CN1","CN1","CN6","CN7","CN7","CN11","CN11","CN11","CN14","CN14","CN21","CN23","CN23","CN24","CB2","CB12","CB12",
+      "CB13","CB14","CB14","CB14","CN1","CN1","CN1","CN2","CN4","CN10","CN23","CN23","CB6","CB6","CB12","CB12","CB21","CB22","CN2","CN2","CN6","CN8","CN13","CN13","CN14","CN14","CN20","CN20","CN21","CN21","CN21","CN21",
+      "CB5","CB5","CB12","CB13","CB15","CB15","CB21","CB21","CB21","CN3","CN4","CN7","CN10","CN11","CN16","CN17","CN20","CN20","CN23","CB1","CB3","CB6","CB6","CB6","CB12","CB12","CB13","CB16","CB19","CB19","CB21")
+Phos=c("0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.05","0.1","0.1","0.1","0.1","0.1","0.1","0.1","0.1","0.1","0.1","0.1","0.1",
+       "0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.2","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4","0.4",
+       "0.4","0.4","0.4","0.4","0.4","0.4","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","0.8","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6",
+       "1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","1.6","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2","3.2")
+Pos=c(4,9,14,9,3,7,11,1,9,14,7,1,1,5,2,11,3,7,1,9,3,4,7,9,14,4,9,9,12,2,5,13,9,1,2,5,1,14,7,5,6,13,4,9,14,3,7,12,4,12,1,1,5,4,9,14,4,11,10,1,5,11,2,5,9,1,4,9,13,2,3,7,9,6,1,1,6,4,9,4,5,7,2,9,11,8,12,
+      4,10,3,7,5,10,1,5,9,13,1,10,3,3,3,11,2,5,6,11,4,5,9,6,15,15,8,9,5,11,14,2,2,7,5,6,1,2,11,12,1)
+
+# Create a dataset of outliers
+DataO=data.frame(Genotype=Genotype, Phos=Phos, Pos=Pos)
+
+# Clean the dataset
+Data=Data %>% group_by(Genotype,Phos) %>% mutate(Pos=row_number()) %>% ungroup()
+Data=Data %>% mutate(Dens=ifelse(paste(Genotype,Phos,Pos) %in% paste(DataO$Genotype,DataO$Phos,DataO$Pos), NA, Dens)) %>% select(-Pos)
+Data=as.data.frame(Data)
+
+
 ##################################
 ### Fitting growth rate models ###
 ##################################
 
 # Split the datasets
-SplitData=split(Data, list(Data$Iso, Data$Phos))
+SplitData=split(Data, list(Data$Genotype, Data$Phos))
 SplitData=SplitData[sapply(SplitData, function(x) dim(x)[1]) > 0]
 
-# Clean the datasets
-SplitData[[11]]$Dens[4]=NA
-SplitData[[11]]$Dens[9]=NA
-SplitData[[11]]$Dens[14]=NA
-SplitData[[12]]$Dens[9]=NA
-SplitData[[14]]$Dens[3]=NA
-SplitData[[14]]$Dens[7]=NA
-SplitData[[14]]$Dens[11]=NA
-SplitData[[17]]$Dens[1]=NA
-SplitData[[19]]$Dens[9]=NA
-SplitData[[19]]$Dens[14]=NA
-SplitData[[38]]$Dens[7]=NA
-SplitData[[40]]$Dens[1]=NA
-SplitData[[41]]$Dens[1]=NA
-SplitData[[41]]$Dens[5]=NA
-SplitData[[48]]$Dens[2]=NA
-SplitData[[48]]$Dens[11]=NA
-SplitData[[49]]$Dens[3]=NA
-SplitData[[49]]$Dens[7]=NA
-SplitData[[52]]$Dens[1]=NA
-SplitData[[60]]$Dens[9]=NA
-SplitData[[63]]$Dens[3]=NA
-SplitData[[73]]$Dens[4]=NA
-SplitData[[73]]$Dens[7]=NA
-SplitData[[73]]$Dens[9]=NA
-SplitData[[73]]$Dens[14]=NA
-SplitData[[82]]$Dens[4]=NA
-SplitData[[82]]$Dens[9]=NA
-SplitData[[87]]$Dens[9]=NA
-SplitData[[89]]$Dens[12]=NA
-SplitData[[98]]$Dens[2]=NA
-SplitData[[99]]$Dens[5]=NA
-SplitData[[99]]$Dens[13]=NA
-SplitData[[101]]$Dens[9]=NA
-SplitData[[105]]$Dens[1]=NA
-SplitData[[105]]$Dens[2]=NA
-SplitData[[105]]$Dens[5]=NA
-SplitData[[108]]$Dens[1]=NA
-SplitData[[109]]$Dens[14]=NA
-SplitData[[122]]$Dens[7]=NA
-SplitData[[128]]$Dens[5]=NA
-SplitData[[128]]$Dens[6]=NA
-SplitData[[128]]$Dens[13]=NA
-SplitData[[132]]$Dens[6]=NA
-SplitData[[138]]$Dens[4]=NA
-SplitData[[138]]$Dens[9]=NA
-SplitData[[138]]$Dens[14]=NA
-SplitData[[147]]$Dens[3]=NA
-SplitData[[147]]$Dens[7]=NA
-SplitData[[147]]$Dens[12]=NA
-SplitData[[148]]$Dens[4]=NA
-SplitData[[148]]$Dens[12]=NA
-SplitData[[153]]$Dens[1]=NA
-SplitData[[154]]$Dens[1]=NA
-SplitData[[154]]$Dens[5]=NA
-SplitData[[158]]$Dens[4]=NA
-SplitData[[158]]$Dens[9]=NA
-SplitData[[158]]$Dens[14]=NA
-SplitData[[161]]$Dens[4]=NA
-SplitData[[161]]$Dens[11]=NA
-SplitData[[168]]$Dens[10]=NA
-SplitData[[170]]$Dens[1]=NA
-SplitData[[170]]$Dens[5]=NA
-SplitData[[171]]$Dens[11]=NA
-SplitData[[174]]$Dens[2]=NA
-SplitData[[185]]$Dens[5]=NA
-SplitData[[185]]$Dens[9]=NA
-SplitData[[186]]$Dens[1]=NA
-SplitData[[187]]$Dens[4]=NA
-SplitData[[187]]$Dens[9]=NA
-SplitData[[187]]$Dens[13]=NA
-SplitData[[192]]$Dens[6]=NA
-SplitData[[197]]$Dens[2]=NA
-SplitData[[197]]$Dens[3]=NA
-SplitData[[197]]$Dens[7]=NA
-SplitData[[198]]$Dens[9]=NA
-SplitData[[200]]$Dens[6]=NA
-SplitData[[206]]$Dens[1]=NA
-SplitData[[219]]$Dens[1]=NA
-SplitData[[219]]$Dens[6]=NA
-SplitData[[227]]$Dens[4]=NA
-SplitData[[227]]$Dens[9]=NA
-SplitData[[234]]$Dens[4]=NA
-SplitData[[234]]$Dens[5]=NA
-SplitData[[241]]$Dens[11]=NA
-SplitData[[244]]$Dens[7]=NA
-SplitData[[245]]$Dens[2]=NA
-SplitData[[246]]$Dens[9]=NA
-SplitData[[246]]$Dens[11]=NA
-SplitData[[251]]$Dens[8]=NA
-SplitData[[253]]$Dens[12]=NA
-SplitData[[258]]$Dens[4]=NA
-SplitData[[258]]$Dens[10]=NA
-SplitData[[259]]$Dens[3]=NA
-SplitData[[259]]$Dens[7]=NA
-SplitData[[265]]$Dens[5]=NA
-SplitData[[265]]$Dens[10]=NA
-SplitData[[266]]$Dens[1]=NA
-SplitData[[266]]$Dens[5]=NA
-SplitData[[266]]$Dens[9]=NA
-SplitData[[266]]$Dens[13]=NA
-SplitData[[270]]$Dens[10]=NA
-SplitData[[275]]$Dens[1]=NA
-SplitData[[275]]$Dens[10]=NA
-SplitData[[279]]$Dens[3]=NA
-SplitData[[279]]$Dens[4]=NA
-SplitData[[283]]$Dens[3]=NA
-SplitData[[284]]$Dens[3]=NA
-SplitData[[286]]$Dens[3]=NA
-SplitData[[286]]$Dens[11]=NA
-SplitData[[293]]$Dens[2]=NA
-SplitData[[293]]$Dens[5]=NA
-SplitData[[293]]$Dens[6]=NA
-SplitData[[297]]$Dens[11]=NA
-SplitData[[298]]$Dens[4]=NA
-SplitData[[301]]$Dens[5]=NA
-SplitData[[304]]$Dens[9]=NA
-SplitData[[305]]$Dens[6]=NA
-SplitData[[310]]$Dens[15]=NA
-SplitData[[311]]$Dens[15]=NA
-SplitData[[314]]$Dens[8]=NA
-SplitData[[314]]$Dens[9]=NA
-SplitData[[317]]$Dens[5]=NA
-SplitData[[320]]$Dens[11]=NA
-SplitData[[322]]$Dens[14]=NA
-SplitData[[325]]$Dens[2]=NA
-SplitData[[325]]$Dens[2]=NA
-SplitData[[325]]$Dens[7]=NA
-SplitData[[328]]$Dens[1]=NA
-SplitData[[332]]$Dens[5]=NA
-SplitData[[332]]$Dens[6]=NA
-SplitData[[333]]$Dens[1]=NA
-SplitData[[336]]$Dens[2]=NA
-SplitData[[340]]$Dens[11]=NA
-SplitData[[340]]$Dens[12]=NA
-SplitData[[342]]$Dens[1]=NA
-
 # Separate the datasets
-SplitDataLi=SplitData[c(1,9,10,14,34,38,39,40,49,87,88,95,97,98,104,136,137,153,185,186,195,196,209,234,235,236,242,244,245,246,247,248,254,255,283,285,295,296,300,304,334)]
-SplitDataLo=SplitData[-c(1,9,10,14,34,38,39,40,49,87,88,95,97,98,104,136,137,153,185,186,195,196,209,234,235,236,242,244,245,246,247,248,254,255,283,285,295,296,300,304,334)]
+SplitDataLi=SplitData[c(1,9,10,14,37,38,46,57,83,89,91,92,98,99,129,144,175,183,184,197,220,221,222,227,229,230,231,232,233,239,240,266,268,277,278,282,286,314)]
+SplitDataLo=SplitData[-c(1,9,10,14,37,38,46,57,83,89,91,92,98,99,129,144,175,183,184,197,220,221,222,227,229,230,231,232,233,239,240,266,268,277,278,282,286,314)]
 
 ### Linear model ###
 
 # Extract the combinations of names
-Iso=lapply(SplitDataLi,"[",c("Iso"))
+Genotype=lapply(SplitDataLi,"[",c("Genotype"))
 Species=lapply(SplitDataLi,"[",c("Species"))
 Phos=lapply(SplitDataLi,"[",c("Phos"))
-Iso=(cbind(do.call("rbind",Iso)))
+Genotype=(cbind(do.call("rbind",Genotype)))
 Species=(cbind(do.call("rbind",Species)))
 Phos=(cbind(do.call("rbind",Phos)))
 
@@ -299,16 +187,16 @@ OutLi=lapply(SplitDataLi, ModLi)
 # Create a dataset
 RateLi=bind_rows(lapply(OutLi, function (x) x[c("Rates")]))
 RateLi=round(cbind(do.call("rbind",RateLi)),4)
-RateLi=cbind(Iso=Iso,Species=Species,Phos=Phos,Model="Linear",RateLi)
+RateLi=cbind(Genotype=Genotype,Species=Species,Phos=Phos,Model="Linear",RateLi)
 rownames(RateLi)=c()
 
 ### Logistic model ###
 
 # Extract combinations of names
-Iso=lapply(SplitDataLo,"[",c("Iso"))
+Genotype=lapply(SplitDataLo,"[",c("Genotype"))
 Species=lapply(SplitDataLo,"[",c("Species"))
 Phos=lapply(SplitDataLo,"[",c("Phos"))
-Iso=(cbind(do.call("rbind",Iso)))
+Genotype=(cbind(do.call("rbind",Genotype)))
 Species=(cbind(do.call("rbind",Species)))
 Phos=(cbind(do.call("rbind",Phos)))
 
@@ -317,13 +205,12 @@ ModLo=function(x) {
   FitLo=nls(log(Dens+1) ~ SSlogis(Day, Asym, xmid, scal), data=x)
   OutLo=FuncLo(FitLo, x$Day)
 }
-lapply(SplitDataLo[54], ModLo)
 OutLo=lapply(SplitDataLo, ModLo)
 
 # Create a dataset
 RateLo=bind_rows(lapply(OutLo, function (x) x[c("Rates")]))
 RateLo=round(cbind(do.call("rbind",RateLo)),4)
-RateLo=cbind(Iso=Iso,Species=Species,Phos=Phos,Model="Logistic",RateLo)
+RateLo=cbind(Genotype=Genotype,Species=Species,Phos=Phos,Model="Logistic",RateLo)
 rownames(RateLo)=c()
 
 
@@ -337,20 +224,20 @@ Data3[,c(6)]=exp(Data3[,c(6)])
 Data3[,c(6)]=round(Data3[,c(6)],4)
 
 # Add the initial density
-Data3=Data3 %>% group_by(Iso,Species,Phos) %>% do(add_row(., Iso=unique(.$Iso), Species=unique(.$Species), Phos=unique(.$Phos), Model=unique(.$Model), Day=0, DensP=log(5000), AGR=0, RGR=0))
-Data3=Data3[order(Data3$Iso, Data3$Phos, Data3$Day),]
+Data3=Data3 %>% group_by(Genotype,Species,Phos) %>% do(add_row(., Genotype=unique(.$Genotype), Species=unique(.$Species), Phos=unique(.$Phos), Model=unique(.$Model), Day=0, DensP=log(5000), AGR=0, RGR=0))
+Data3=Data3[order(Data3$Genotype, Data3$Phos, Data3$Day),]
 Data3=Data3[!duplicated(Data3),]
 Data3=as.data.frame(Data3)
 
 # Order the dataset
-Data=Data[order(Data$Phos,Data$Iso,Data$Trial),]
-Data$Iso=factor(Data$Iso, levels=unique(Data$Iso))
+Data=Data[order(Data$Phos,Data$Genotype,Data$Trial),]
+Data$Genotype=factor(Data$Genotype, levels=unique(Data$Genotype))
 Data$Phos=factor(Data$Phos, levels=unique(Data$Phos))
 Data$Trial=factor(Data$Trial, levels=unique(Data$Trial))
 
 # Split the datasets
-SplitData3a=split(Data, list(Data$Iso, Data$Phos))
-SplitData3b=split(Data, list(Data$Iso, Data$Phos, Data$Trial))
+SplitData3a=split(Data, list(Data$Genotype, Data$Phos))
+SplitData3b=split(Data, list(Data$Genotype, Data$Phos, Data$Trial))
 SplitData3a=SplitData3a[sapply(SplitData3a, function(x) dim(x)[1]) > 0]
 SplitData3b=SplitData3b[sapply(SplitData3b, function(x) dim(x)[1]) > 0]
 
@@ -362,28 +249,28 @@ GRInterSD=lapply(SplitData3a, ModGRSD)
 GRIntra=lapply(SplitData3b, ModGR)
 
 # Create an interspecific dataset
-Iso=c(unique(Data[,c("Iso", "Species","Phos")])[,1])
-Species=c(unique(Data[,c("Iso", "Species","Phos")])[,2])
-Phos=c(unique(Data[,c("Iso", "Species","Phos")])[,3])
+Genotype=c(unique(Data[,c("Genotype", "Species","Phos")])[,1])
+Species=c(unique(Data[,c("Genotype", "Species","Phos")])[,2])
+Phos=c(unique(Data[,c("Genotype", "Species","Phos")])[,3])
 GRInter=as.data.frame(round(cbind(do.call("rbind",GRInter)),4))[[1]]
 GRInterSD=as.data.frame(round(cbind(do.call("rbind",GRInterSD)),4))[[1]]
-Data4=data.frame(Iso=Iso, Species=Species, Phos=Phos, GR=GRInter, GRLSD=GRInter-GRInterSD, GRUSD=GRInter+GRInterSD)
+Data4=data.frame(Genotype=Genotype, Species=Species, Phos=Phos, GR=GRInter, GRLSD=GRInter-GRInterSD, GRUSD=GRInter+GRInterSD)
 
 # Create an intraspecific dataset
-Iso=rep(c(unique(Data[,c("Iso", "Species","Phos")])[,1]),3)
-Species=rep(c(unique(Data[,c("Iso", "Species","Phos")])[,2]),3)
-Phos=rep(c(unique(Data[,c("Iso", "Species","Phos")])[,3]),3)
-Trial=rep(c(unique(Data[,c("Trial")])),each=343)
+Genotype=rep(c(unique(Data[,c("Genotype", "Species","Phos")])[,1]),3)
+Species=rep(c(unique(Data[,c("Genotype", "Species","Phos")])[,2]),3)
+Phos=rep(c(unique(Data[,c("Genotype", "Species","Phos")])[,3]),3)
+Trial=rep(c(unique(Data[,c("Trial")])),each=322)
 GRIntra=as.data.frame(round(cbind(do.call("rbind",GRIntra)),4))[[1]]
-Data5=data.frame(Iso=Iso, Species=Species, Phos=Phos, Trial=Trial, GR=GRIntra)
+Data5=data.frame(Genotype=Genotype, Species=Species, Phos=Phos, Trial=Trial, GR=GRIntra)
 
 # Adding the null growth rate
-Data4=as.data.frame(Data4 %>% group_by(Iso,Species) %>% do(add_row(., Iso=unique(.$Iso), Species=unique(.$Species), Phos="0", GR=0, GRLSD=0, GRUSD=0)))
-Data5=as.data.frame(Data5 %>% group_by(Iso,Species) %>% do(add_row(., Iso=unique(.$Iso), Species=unique(.$Species), Phos="0", Trial=unique(.$Trial), GR=0)))
+Data4=as.data.frame(Data4 %>% group_by(Genotype,Species) %>% do(add_row(., Genotype=unique(.$Genotype), Species=unique(.$Species), Phos="0", GR=0, GRLSD=0, GRUSD=0)))
+Data5=as.data.frame(Data5 %>% group_by(Genotype,Species) %>% do(add_row(., Genotype=unique(.$Genotype), Species=unique(.$Species), Phos="0", Trial=unique(.$Trial), GR=0)))
 Data4$Phos=as.numeric(as.character(Data4$Phos))
 Data5$Phos=as.numeric(as.character(Data5$Phos))
-Data4=Data4[order(Data4$Iso, Data4$Phos),]
-Data5=Data5[order(Data5$Trial, Data5$Iso, Data5$Phos),]
+Data4=Data4[order(Data4$Genotype, Data4$Phos),]
+Data5=Data5[order(Data5$Trial, Data5$Genotype, Data5$Phos),]
 
 
 ############################
@@ -393,22 +280,24 @@ Data5=Data5[order(Data5$Trial, Data5$Iso, Data5$Phos),]
 ### Growth rate ###
 
 # Remove negative growth rates
-Data4$GR[Data4$GR<0]=0
+Data4$GR[is.na(Data4$GR)]=0
+Data5$GR[is.na(Data5$GR)]=0
+Data5$GR[Data5$GR<0]=0
 Data5$GR[Data5$GR<0]=0
 
 # Prepare the datasets
-Data4$GRM=rep(as.data.frame(Data4 %>% group_by(Iso,Species) %>% summarise(GRM=max(GR)))[,3], each=8)
-Data4$GRMLSD=rep(as.data.frame(Data4 %>% group_by(Iso,Species) %>% summarise(GRM=max(GRLSD)))[,3], each=8)
-Data4$GRMUSD=rep(as.data.frame(Data4 %>% group_by(Iso,Species) %>% summarise(GRM=max(GRUSD)))[,3], each=8)
-Data5$GRM=rep(as.data.frame(Data5 %>% group_by(Trial,Iso,Species) %>% summarise(GRM=max(GR)))[,4], each=8)
+Data4$GRM=rep(as.data.frame(setDT(Data4)[, .(GRM=max(GR)), by=list(Genotype,Species)])[,3], each=8)
+Data4$GRMLSD=rep(as.data.frame(setDT(Data4)[, .(GRMLSD=max(GRLSD)), by=list(Genotype,Species)])[,3], each=8)
+Data4$GRMUSD=rep(as.data.frame(setDT(Data4)[, .(GRMUSD=max(GRUSD)), by=list(Genotype,Species)])[,3], each=8)
+Data5$GRM=rep(as.data.frame(setDT(Data5)[, .(GRM=max(GR)), by=list(Trial,Genotype,Species)])[,4], each=8)
 GRMInter=subset(Data4, Phos=="0")$GRM
 GRMInterLSD=subset(Data4, Phos=="0")$GRMLSD
 GRMInterUSD=subset(Data4, Phos=="0")$GRMUSD
 GRMIntra=subset(Data5, Phos=="0")$GRM
 
 # Split the datasets
-SplitData4a=split(Data4, list(Data4$Iso))
-SplitData4b=split(Data5, list(Data5$Iso, Data5$Trial))
+SplitData4a=split(Data4, list(Data4$Genotype))
+SplitData4b=split(Data5, list(Data5$Genotype, Data5$Trial))
 
 # Monod model
 FuncH=function(x) {OutH=summary(nls(GR~(GRM*Phos)/(Phos + K), start=c(K=1), data=x))$coefficients[2]}
@@ -418,25 +307,25 @@ HSInterSD=lapply(SplitData4a, FuncHSD)
 HSIntra=lapply(SplitData4b, FuncH)
 
 # Create an interspecific dataset
-Iso=c(unique(Data[,c("Iso","Species")])[,1])
-Species=c(unique(Data[,c("Iso","Species")])[,2])
+Genotype=c(unique(Data[,c("Genotype","Species")])[,1])
+Species=c(unique(Data[,c("Genotype","Species")])[,2])
 HSInter=as.data.frame(round(cbind(do.call("rbind",HSInter)),4))[[1]] 
 HSInterSD=as.data.frame(round(cbind(do.call("rbind",HSInterSD)),4))[[1]]
-Data6=data.frame(Iso=Iso, Species=Species, HS=HSInter, HSLSD=HSInter-HSInterSD, HSUSD=HSInter+HSInterSD, AF=round(GRMInter/HSInter,4), AFLSD=round(GRMInterLSD/HSInter,4), AFUSD=round(GRMInterUSD/HSInter,4), GRM=GRMInter, GRMLSD=GRMInterLSD, GRMUSD=GRMInterUSD)
+Data6=data.frame(Genotype=Genotype, Species=Species, HS=HSInter, HSLSD=HSInter-HSInterSD, HSUSD=HSInter+HSInterSD, AF=round(GRMInter/HSInter,4), AFLSD=round(GRMInterLSD/HSInter,4), AFUSD=round(GRMInterUSD/HSInter,4), GRM=GRMInter, GRMLSD=GRMInterLSD, GRMUSD=GRMInterUSD)
 
 # Create an intraspecific dataset
-Iso=rep(c(unique(Data[,c("Iso","Species")])[,1]),3)
-Species=rep(c(unique(Data[,c("Iso","Species")])[,2]),3)
-Trial=rep(c(unique(Data[,c("Trial")])),each=49)
+Genotype=rep(c(unique(Data[,c("Genotype","Species")])[,1]),3)
+Species=rep(c(unique(Data[,c("Genotype","Species")])[,2]),3)
+Trial=rep(c(unique(Data[,c("Trial")])),each=46)
 HSIntra=as.data.frame(round(cbind(do.call("rbind",HSIntra)),4))[[1]] 
-Data7=data.frame(Iso=Iso, Species=Species, Trial=Trial, HS=HSIntra, AF=round(GRMIntra/HSIntra,4), GRM=GRMIntra)
+Data7=data.frame(Genotype=Genotype, Species=Species, Trial=Trial, HS=HSIntra, AF=round(GRMIntra/HSIntra,4), GRM=GRMIntra)
 
 # Export the datasets
 Data6$HS[Data6$HS < 0]=0
 Data6$HSLSD[Data6$HSLSD < 0]=0
 Data6$HSUSD[Data6$HSUSD < 0]=0
 Data7$HS[Data7$HS < 0]=0
-Data7=Data7[order(Data7$Iso,Data7$Trial),]
+Data7=Data7[order(Data7$Genotype,Data7$Trial),]
 write.table(Data6[,c(1:11)], file="Data_HS_Inter.txt", sep="\t", row.names=F)
 write.table(Data7[,c(1:6)], file="Data_HS_Intra.txt", sep="\t", row.names=F)
 
@@ -445,10 +334,10 @@ FuncH=function(x) {OutH=predict(nls(GR~(GRM*Phos)/(Phos + K), start=c(K=1), data
 HSInter=lapply(SplitData4a, FuncH)
 
 # Create a dataset
-Iso=c(unique(Data4[,c("Iso", "Species","Phos")])[,1])
-Species=c(unique(Data4[,c("Iso", "Species","Phos")])[,2])
-Phos=c(unique(Data4[,c("Iso", "Species","Phos")])[,3])
-Data8=data.frame(Iso=Iso, Species=Species, Phos=Phos, GRP=unlist(HSInter))
+Genotype=c(unique(Data4[,c("Genotype", "Species","Phos")])[,1])
+Species=c(unique(Data4[,c("Genotype", "Species","Phos")])[,2])
+Phos=c(unique(Data4[,c("Genotype", "Species","Phos")])[,3])
+Data8=data.frame(Genotype=Genotype, Species=Species, Phos=Phos, GRP=unlist(HSInter))
 
 ### Error bars ###
 
@@ -457,27 +346,27 @@ Data10=as.data.frame(setDT(na.omit(Data6))[, .(HSSpeciesL=mean(HS)-sd(HS), HSSpe
 Data10$HSSpecies[Data10$HSSpecies < 0]=0
 Data10$HSSpeciesL[Data10$HSSpeciesL < 0]=0
 Data10$HSSpeciesU[Data10$HSSpeciesU < 0]=0
-Data6$HSSpecies=c(rep(Data10$HSSpecies[1],24), rep(Data10$HSSpecies[2],25))
-Data6$HSSpeciesL=c(rep(Data10$HSSpeciesL[1],24), rep(Data10$HSSpeciesL[2],25))
-Data6$HSSpeciesU=c(rep(Data10$HSSpeciesU[1],24), rep(Data10$HSSpeciesU[2],25))
+Data6$HSSpecies=c(rep(Data10$HSSpecies[1],24), rep(Data10$HSSpecies[2],22))
+Data6$HSSpeciesL=c(rep(Data10$HSSpeciesL[1],24), rep(Data10$HSSpeciesL[2],22))
+Data6$HSSpeciesU=c(rep(Data10$HSSpeciesU[1],24), rep(Data10$HSSpeciesU[2],22))
 
 # Calculate the error bars for affinity constant
 Data11=as.data.frame(setDT(na.omit(Data6))[, .(AFSpeciesL=mean(AF)-sd(AF), AFSpecies=mean(AF), AFSpeciesU=mean(AF)+sd(AF)), by=list(Species)])
 Data11$AFSpeciesL[Data11$AFSpeciesL < 0]=0
 Data11$AFSpecies[Data11$AFSpecies < 0]=0
 Data11$AFSpeciesU[Data11$AFSpeciesU < 0]=0
-Data6$AFSpeciesL=c(rep(Data11$AFSpeciesL[1],24), rep(Data11$AFSpeciesL[2],25))
-Data6$AFSpecies=c(rep(Data11$AFSpecies[1],24), rep(Data11$AFSpecies[2],25))
-Data6$AFSpeciesU=c(rep(Data11$AFSpeciesU[1],24), rep(Data11$AFSpeciesU[2],25))
+Data6$AFSpeciesL=c(rep(Data11$AFSpeciesL[1],24), rep(Data11$AFSpeciesL[2],22))
+Data6$AFSpecies=c(rep(Data11$AFSpecies[1],24), rep(Data11$AFSpecies[2],22))
+Data6$AFSpeciesU=c(rep(Data11$AFSpeciesU[1],24), rep(Data11$AFSpeciesU[2],22))
 
 # Calculate the error bars for maximum growth rate
 Data12=as.data.frame(setDT(na.omit(Data6))[, .(GRMSpeciesL=mean(GRM)-sd(GRM), GRMSpecies=mean(GRM), GRMSpeciesU=mean(GRM)+sd(GRM)), by=list(Species)])
 Data12$GRMSpeciesL[Data12$GRMSpeciesL < 0]=0
 Data12$GRMSpecies[Data12$GRMSpecies < 0]=0
 Data12$GRMSpeciesU[Data12$GRMSpeciesU < 0]=0
-Data6$GRMSpeciesL=c(rep(Data12$GRMSpeciesL[1],24), rep(Data12$GRMSpeciesL[2],25))
-Data6$GRMSpecies=c(rep(Data12$GRMSpecies[1],24), rep(Data12$GRMSpecies[2],25))
-Data6$GRMSpeciesU=c(rep(Data12$GRMSpeciesU[1],24), rep(Data12$GRMSpeciesU[2],25))
+Data6$GRMSpeciesL=c(rep(Data12$GRMSpeciesL[1],24), rep(Data12$GRMSpeciesL[2],22))
+Data6$GRMSpecies=c(rep(Data12$GRMSpecies[1],24), rep(Data12$GRMSpecies[2],22))
+Data6$GRMSpeciesU=c(rep(Data12$GRMSpeciesU[1],24), rep(Data12$GRMSpeciesU[2],22))
 
 # Export the dataset
 Data6[,c(3:20)]=round(Data6[,c(3:20)],4)
@@ -493,7 +382,7 @@ ggplot(Data8, aes(Phos, GRP, group=Species)) +
   geom_line(aes(color=Species),size=1) +
   geom_point(aes(color=Species), alpha=0.8, size=3, pch=16) +
   ylab(expression('Maximum growth rate'~'('*day^-1*')')) +
-  xlab(expression('Phosphorus concentration'~'('*µµmol~PO[4]^'3-'~mL^-1*')'))+
+  xlab(expression('Phosphorus concentration'~'('*µµM~PO[4]^'3-'~mL^-1*')'))+
   theme(axis.text.y=element_text(face="plain", colour="black", size=18)) +  
   theme(axis.text.x=element_text(face="plain", colour="black", size=18)) + 
   theme(axis.title.y=element_text(face="plain", colour="black", size=18)) +
@@ -505,7 +394,7 @@ ggplot(Data8, aes(Phos, GRP, group=Species)) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
   theme(strip.text.x=element_text(face="plain", color="black", size=18)) +
   theme(strip.background=element_blank()) +
-  facet_wrap(~Iso, ncol=7, nrow=7, scales="free") +
+  facet_wrap(~Genotype, ncol=7, nrow=7, scales="free") +
   theme(plot.margin=unit(c(5.5,5.5,5.5,5.5),"pt")) +
   theme(legend.position="bottom")
 dev.off()
@@ -519,8 +408,8 @@ ggplot(Data6, aes(Species, HS, group=Species)) +
   geom_text(x=1.00, y=0.6+(0.035*0.6), label="**", color="black", size=5) +
   geom_text(x=2.00, y=0.6+(0.035*0.6), label="***", color="black", size=5) +
   geom_text(x=1.50, y=0.6+(0.125*0.6), label="NS", color="black", size=5) +
-  ylab(expression('Half-saturation constant'~'('*µmol~PO[4]^{"-"}~mL^-1*')')) +
-  xlab(expression(italic('Chlamydomonas')~'spp. isolates')) +
+  ylab(expression('Half-saturation constant'~'('*µM~PO[4]^{"-"}~L^-1*')')) +
+  xlab(expression(italic('Chlamydomonas')~'genotypes')) +
   theme(axis.text.y=element_text(face="plain", colour="black", size=18)) +  
   theme(axis.text.x=element_text(face="italic", colour="black", size=18)) +  
   theme(axis.title.y=element_text(face="plain", colour="black", size=18)) +
@@ -529,7 +418,7 @@ ggplot(Data6, aes(Species, HS, group=Species)) +
   scale_x_discrete(labels=c("Chlamydomonas noctigama"="C. noctigama", "Chlamydomonas bilatus"="C. bilatus")) +
   theme(axis.line=element_line(colour="black")) + theme(panel.background=element_blank()) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
-  scale_color_manual(values=c("Chlamydomonas noctigama"="steelblue2", "Chlamydomonas bilatus"="tomato3")) +
+  scale_color_manual(values=c("Chlamydomonas noctigama"="dodgerblue3", "Chlamydomonas bilatus"="firebrick3")) +
   theme(plot.margin=unit(c(5.5,5.5,5.5,5.5),"pt")) +
   theme(legend.position="none")
 dev.off() 
@@ -544,7 +433,7 @@ ggplot(Data6, aes(Species, GRM, group=Species)) +
   geom_text(x=2.00, y=0.6+(0.035*0.6), label="***", color="black", size=5) +
   geom_text(x=1.50, y=0.6+(0.125*0.6), label="NS", color="black", size=5) +
   ylab(expression('Maximum growth rate'~'('*day^-1*')')) +
-  xlab(expression(italic('Chlamydomonas')~'spp. isolates')) +
+  xlab(expression(italic('Chlamydomonas')~'genotypes')) +
   theme(axis.text.y=element_text(face="plain", colour="black", size=18)) +  
   theme(axis.text.x=element_text(face="italic", colour="black", size=18)) +  
   theme(axis.title.y=element_text(face="plain", colour="black", size=18)) +
@@ -553,7 +442,7 @@ ggplot(Data6, aes(Species, GRM, group=Species)) +
   scale_x_discrete(labels=c("Chlamydomonas noctigama"="C. noctigama", "Chlamydomonas bilatus"="C. bilatus")) +
   theme(axis.line=element_line(colour="black")) + theme(panel.background=element_blank()) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
-  scale_color_manual(values=c("Chlamydomonas noctigama"="steelblue2", "Chlamydomonas bilatus"="tomato3")) +
+  scale_color_manual(values=c("Chlamydomonas noctigama"="dodgerblue3", "Chlamydomonas bilatus"="firebrick3")) +
   theme(plot.margin=unit(c(5.5,5.5,5.5,5.5),"pt")) +
   theme(legend.position="none")
 dev.off() 
@@ -577,6 +466,9 @@ bartlett.test(log(Data6$HS+1), Data6$Species)
 # Comparisons of means
 kruskal.test(log(Data6$HS+1), Data6$Species)
 
+# Generalized linear regressions
+summary(aov(glm(HS~Species, family=Gamma(link="log"), data=Data6)))
+
 ### Maximum growth rate ###
 
 # Test for normality
@@ -590,6 +482,9 @@ bartlett.test(log(Data6$GRM+1), Data6$Species)
 
 # Comparisons of means
 kruskal.test(log(Data6$GRM+1), Data6$Species)
+
+# Generalized linear regressions
+summary(aov(glm(GRM~Species, family=Gamma(link="log"), data=Data6)))
 
 
 ######################################
@@ -614,12 +509,16 @@ qqline(log(DataN$HS+1))
 hist(log(DataN$HS+1))
 
 # Test for homoscedasticity
-bartlett.test(log(DataB$HS+1), DataB$Iso)
-bartlett.test(log(DataN$HS+1), DataN$Iso)
+bartlett.test(log(DataB$HS+1), DataB$Genotype)
+bartlett.test(log(DataN$HS+1), DataN$Genotype)
 
 # Comparisons of means
-kruskal.test(log(DataB$HS+1), DataB$Iso)
-kruskal.test(log(DataN$HS+1), DataN$Iso)
+kruskal.test(log(DataB$HS+1), DataB$Genotype)
+kruskal.test(log(DataN$HS+1), DataN$Genotype)
+
+# Generalized linear regressions
+summary(aov(glm(HS~Genotype, family=Gamma(link="log"), data=DataB)))
+summary(aov(glm(HS~Genotype, family=Gamma(link="log"), data=DataN)))
 
 ### Maximum growth rate ###
 
@@ -635,24 +534,13 @@ qqline(log(DataN$GRM+1))
 hist(log(DataN$GRM+1))
 
 # Test for homoscedasticity
-bartlett.test(log(DataB$GRM+1), DataB$Iso)
-bartlett.test(log(DataN$GRM+1), DataN$Iso)
+bartlett.test(log(DataB$GRM+1), DataB$Genotype)
+bartlett.test(log(DataN$GRM+1), DataN$Genotype)
 
 # Comparisons of means
-kruskal.test(log(DataB$GRM+1), DataB$Iso)
-kruskal.test(log(DataN$GRM+1), DataN$Iso)
+kruskal.test(log(DataB$GRM+1), DataB$Genotype)
+kruskal.test(log(DataN$GRM+1), DataN$Genotype)
 
-
-####################################################
-### Interspecific vs intraspecific contributions ###
-####################################################
-
-# Mixed effect regressions
-Model1=lmer(HS~1 +(1|Iso), REML=T, data=Data)
-Model2=lmer(HS~Species +(1|Iso), REML=T, data=Data)
-anova(Model1,Model2)
-
-# Mixed effect regressions
-Model1=lmer(GRM~1 +(1|Iso), REML=T, data=Data)
-Model2=lmer(GRM~Species +(1|Iso), REML=T, data=Data)
-anova(Model1,Model2)
+# Generalized linear regressions
+summary(aov(glm(GRM~Genotype, family=Gamma(link="log"), data=DataB)))
+summary(aov(glm(GRM~Genotype, family=Gamma(link="log"), data=DataN)))
