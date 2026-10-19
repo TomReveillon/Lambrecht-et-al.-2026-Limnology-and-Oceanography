@@ -466,9 +466,6 @@ bartlett.test(log(Data6$HS+1), Data6$Species)
 # Comparisons of means
 kruskal.test(log(Data6$HS+1), Data6$Species)
 
-# Generalized linear regressions
-summary(aov(glm(HS~Species, family=Gamma(link="log"), data=Data6)))
-
 ### Maximum growth rate ###
 
 # Test for normality
@@ -482,9 +479,6 @@ bartlett.test(log(Data6$GRM+1), Data6$Species)
 
 # Comparisons of means
 kruskal.test(log(Data6$GRM+1), Data6$Species)
-
-# Generalized linear regressions
-summary(aov(glm(GRM~Species, family=Gamma(link="log"), data=Data6)))
 
 
 ######################################
@@ -516,10 +510,6 @@ bartlett.test(log(DataN$HS+1), DataN$Genotype)
 kruskal.test(log(DataB$HS+1), DataB$Genotype)
 kruskal.test(log(DataN$HS+1), DataN$Genotype)
 
-# Generalized linear regressions
-summary(aov(glm(HS~Genotype, family=Gamma(link="log"), data=DataB)))
-summary(aov(glm(HS~Genotype, family=Gamma(link="log"), data=DataN)))
-
 ### Maximum growth rate ###
 
 # Test for normality
@@ -540,7 +530,3 @@ bartlett.test(log(DataN$GRM+1), DataN$Genotype)
 # Comparisons of means
 kruskal.test(log(DataB$GRM+1), DataB$Genotype)
 kruskal.test(log(DataN$GRM+1), DataN$Genotype)
-
-# Generalized linear regressions
-summary(aov(glm(GRM~Genotype, family=Gamma(link="log"), data=DataB)))
-summary(aov(glm(GRM~Genotype, family=Gamma(link="log"), data=DataN)))
