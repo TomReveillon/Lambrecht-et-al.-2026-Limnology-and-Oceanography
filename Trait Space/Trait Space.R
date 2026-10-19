@@ -681,15 +681,15 @@ Plot9=ggplot(Data, aes(HS, CC, group=Species)) + coord_cartesian(clip="off") +
 # Panel plot of trait spaces
 tiff('Competitiveness vs Competitiveness Trait Spaces.tiff', units="in", width=18, height=6, res=1000)
 Panel=list(Plot7,Plot8,Plot9)
-Yaxis=textGrob(expression('Competitiveness'), gp=gpar(fontface="plain", fontsize=24), rot=90)
-Xaxis=textGrob(expression('Defense'), gp=gpar(fontface="plain", fontsize=24), rot=0)
+Yaxis=textGrob(expression('Defense'), gp=gpar(fontface="plain", fontsize=24), rot=90)
+Xaxis=textGrob(expression('Competitiveness'), gp=gpar(fontface="plain", fontsize=24), rot=0)
 grid.arrange(grobs=Panel, ncol=3, nrow=1, top=Xaxis, right=Yaxis, layout_matrix=rbind(c(1,1,2,2,3,3)))
 dev.off()
 
 # Panel plot of trait spaces
 tiff('Trait Spaces.tiff', units="in", width=18.00, height=18.00, res=1000)
 Panel=list(Plot1,Plot2,Plot3,Plot4,Plot5,Plot6,Plot7,Plot8,Plot9)
-Yaxis=textGrob(expression('Competitiveness'), gp=gpar(fontface="plain", fontsize=24), rot=90)
-Xaxis=textGrob(expression('Defense'), gp=gpar(fontface="plain", fontsize=24), rot=0)
+Yaxis=textGrob(expression('Defense'), gp=gpar(fontface="plain", fontsize=24), rot=90)
+Xaxis=textGrob(expression('Competitiveness'), gp=gpar(fontface="plain", fontsize=24), rot=0)
 grid.arrange(grobs=Panel, ncol=3, nrow=3, top=Xaxis, right=Yaxis, layout_matrix=rbind(c(1,1,2,2,3,3),c(4,4,5,5,6,6),c(7,7,8,8,9,9)))
 dev.off()
