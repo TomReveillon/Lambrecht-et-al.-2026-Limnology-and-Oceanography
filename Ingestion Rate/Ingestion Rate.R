@@ -1,4 +1,4 @@
-setwd("~/Activité Professionnelle/LIMNO 2019-2023/Collaborations/Chapter 1 Richard - Isolates Trait Variation/Ingestion Rate")
+setwd("~/Activité Professionnelle/LIMNO Konstanz (2019-2023)/Collaborations/Chapter 1 Richard - Isolates Trait Variation/Ingestion Rate")
 
 rm(list=ls())
 
@@ -27,11 +27,11 @@ library(reshape2)
 library(rstatix)
 library(scales)
 
-######################################
-######################################
-##### INGESTION RATE OF ISOLATES #####
-######################################
-######################################
+#######################################
+#######################################
+##### INGESTION RATE OF GENOTYPES #####
+#######################################
+#######################################
 
 # Import the dataset
 Data=read.table("Data_IR.txt", h=T, dec=",")
@@ -44,10 +44,10 @@ Data[,c(5:8,10:11)] %<>% mutate_if(is.character,as.numeric)
 Data[,c(5:8,10:11)] %<>% mutate_if(is.integer,as.numeric)
 Data[,c(5:8,10:11)] %<>% mutate_if(is.factor,as.numeric)
 
-# Sort the dataset by isolate
-Data$Iso=factor(Data$Iso, levels=unique(Data$Iso))
+# Sort the dataset by genotype
+Data$Genotype=factor(Data$Genotype, levels=unique(Data$Genotype))
 Data$Species=factor(Data$Species, levels=unique(Data$Species))
-Data=Data[order(Data$Iso,Data$Trial),]
+Data=Data[order(Data$Genotype,Data$Trial),]
 
 # Calculate the densities
 Data$IDens=round(Data$IXMI*Data$Volu*Data$Site*Data$Dilu*Data$Cove,0)
@@ -72,11 +72,11 @@ Data$Inges[Data$Inges < 0]=0
 Data$Clear[Data$Clear < 0]=0
 
 # Calculate the maximum ingestion and clearance rates
-Data=setDT(Data)[, .SD[which.max(Inges)], by=list(Iso,Species,Trial)]
+Data=setDT(Data)[, .SD[which.max(Inges)], by=list(Genotype,Species,Trial)]
 
 # Calculate the mean ingestion and clearance rates
-Data2=setDT(Data)[, .(IR=round(mean(Inges),4), IRLSD=round(mean(Inges)-sd(Inges),4), IRUSD=round(mean(Inges)+sd(Inges),4), CR=round(mean(Clear),4), CRLSD=round(mean(Clear)-sd(Clear),4), CRUSD=round(mean(Clear)+sd(Clear),4)), by=list(Iso,Species)]
-Data3=setDT(Data)[, .(IR=round(mean(Inges),4), CR=round(mean(Clear),4)), by=list(Iso,Species,Trial)]
+Data2=setDT(Data)[, .(IR=round(mean(Inges),4), IRLSD=round(mean(Inges)-sd(Inges),4), IRUSD=round(mean(Inges)+sd(Inges),4), CR=round(mean(Clear),4), CRLSD=round(mean(Clear)-sd(Clear),4), CRUSD=round(mean(Clear)+sd(Clear),4)), by=list(Genotype,Species)]
+Data3=setDT(Data)[, .(IR=round(mean(Inges),4), CR=round(mean(Clear),4)), by=list(Genotype,Species,Trial)]
 Data2=as.data.frame(Data2)
 Data3=as.data.frame(Data3)
 
@@ -85,7 +85,7 @@ Data2$IR[Data2$IR < 0]=0; Data2$IRLSD[Data2$IRLSD < 0]=0; Data2$IRUSD[Data2$IRUS
 Data3$IR[Data3$IR < 0]=0
 Data2$CR[Data2$CR < 0]=0; Data2$CRLSD[Data2$CRLSD < 0]=0; Data2$CRUSD[Data2$CRUSD < 0]=0
 Data3$CR[Data3$CR < 0]=0
-Data3=Data3[order(Data3$Iso,Data3$Trial),]
+Data3=Data3[order(Data3$Genotype,Data3$Trial),]
 write.table(Data2[,c(1:8)], file="Data_IR_Inter.txt", sep="\t", row.names=F)
 write.table(Data3[,c(1:5)], file="Data_IR_Intra.txt", sep="\t", row.names=F)
 
@@ -93,15 +93,15 @@ write.table(Data3[,c(1:5)], file="Data_IR_Intra.txt", sep="\t", row.names=F)
 
 # Calculate the error bars for ingestion rate
 Data4=as.data.frame(setDT(na.omit(Data2))[, .(IRSpecies=round(mean(IR),4), IRSpeciesL=round(mean(IR)-sd(IR),4), IRSpeciesU=round(mean(IR)+sd(IR),4)), by=list(Species)])
-Data2$IRSpecies=c(rep(Data4$IRSpecies[1],24), rep(Data4$IRSpecies[2],25))
-Data2$IRSpeciesL=c(rep(Data4$IRSpeciesL[1],24), rep(Data4$IRSpeciesL[2],25))
-Data2$IRSpeciesU=c(rep(Data4$IRSpeciesU[1],24), rep(Data4$IRSpeciesU[2],25))
+Data2$IRSpecies=c(rep(Data4$IRSpecies[1],24), rep(Data4$IRSpecies[2],22))
+Data2$IRSpeciesL=c(rep(Data4$IRSpeciesL[1],24), rep(Data4$IRSpeciesL[2],22))
+Data2$IRSpeciesU=c(rep(Data4$IRSpeciesU[1],24), rep(Data4$IRSpeciesU[2],22))
 
 # Calculate the error bars for clearance rate
 Data5=as.data.frame(setDT(na.omit(Data2))[, .(CRSpecies=round(mean(CR),4), CRSpeciesL=round(mean(CR)-sd(CR),4), CRSpeciesU=round(mean(CR)+sd(CR),4)), by=list(Species)])
-Data2$CRSpecies=c(rep(Data5$CRSpecies[1],24), rep(Data5$CRSpecies[2],25))
-Data2$CRSpeciesL=c(rep(Data5$CRSpeciesL[1],24), rep(Data5$CRSpeciesL[2],25))
-Data2$CRSpeciesU=c(rep(Data5$CRSpeciesU[1],24), rep(Data5$CRSpeciesU[2],25))
+Data2$CRSpecies=c(rep(Data5$CRSpecies[1],24), rep(Data5$CRSpecies[2],22))
+Data2$CRSpeciesL=c(rep(Data5$CRSpeciesL[1],24), rep(Data5$CRSpeciesL[2],22))
+Data2$CRSpeciesU=c(rep(Data5$CRSpeciesU[1],24), rep(Data5$CRSpeciesU[2],22))
 
 # Export the dataset
 Data2[,c(3:14)]=round(Data2[,c(3:14)],4)
@@ -122,7 +122,7 @@ ggplot(Data2, aes(Species, IR, group=Species)) +
   geom_text(x=2.00, y=0.45+(0.045*0.45), label="NS", color="black", size=5) +
   geom_text(x=1.50, y=0.45+(0.115*0.45), label="**", color="black", size=5) +
   ylab(expression('Maximum ingestion rate'~'('*cells~sec^-1~ind^-1*')')) +
-  xlab(expression(italic('Chlamydomonas')~'spp. isolates')) +
+  xlab(expression(italic('Chlamydomonas')~'genotypes')) +
   theme(axis.text.y=element_text(face="plain", colour="black", size=18)) +  
   theme(axis.text.x=element_text(face="italic", colour="black", size=18)) +  
   theme(axis.title.y=element_text(face="plain", colour="black", size=18)) +
@@ -131,7 +131,7 @@ ggplot(Data2, aes(Species, IR, group=Species)) +
   scale_x_discrete(labels=c("Chlamydomonas noctigama"="C. noctigama", "Chlamydomonas bilatus"="C. bilatus")) +
   theme(axis.line=element_line(colour="black")) + theme(panel.background=element_blank()) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
-  scale_color_manual(values=c("Chlamydomonas noctigama"="steelblue2", "Chlamydomonas bilatus"="tomato3")) +
+  scale_color_manual(values=c("Chlamydomonas noctigama"="dodgerblue3", "Chlamydomonas bilatus"="firebrick3")) +
   theme(plot.margin=unit(c(5.5,5.5,5.5,5.5),"pt")) +
   theme(legend.position="none")
 dev.off() 
@@ -146,7 +146,7 @@ ggplot(Data2, aes(Species, CR*10^2, group=Species)) +
   geom_text(x=2.00, y=2.1+(0.045*2.1), label="NS", color="black", size=5) +
   geom_text(x=1.50, y=2.1+(0.125*2.1), label="NS", color="black", size=5) +
   ylab(expression('Maximum clearance rate'~'('*10^-2~mL~day^-1~ind^-1*')')) +
-  xlab(expression(italic('Chlamydomonas')~'spp. isolates')) +
+  xlab(expression(italic('Chlamydomonas')~'genotypes')) +
   theme(axis.text.y=element_text(face="plain", colour="black", size=18)) +  
   theme(axis.text.x=element_text(face="italic", colour="black", size=18)) +  
   theme(axis.title.y=element_text(face="plain", colour="black", size=18)) +
@@ -155,7 +155,7 @@ ggplot(Data2, aes(Species, CR*10^2, group=Species)) +
   scale_x_discrete(labels=c("Chlamydomonas noctigama"="C. noctigama", "Chlamydomonas bilatus"="C. bilatus")) +
   theme(axis.line=element_line(colour="black")) + theme(panel.background=element_blank()) +
   theme(panel.grid.major=element_blank(), panel.grid.minor=element_blank()) +
-  scale_color_manual(values=c("Chlamydomonas noctigama"="steelblue2", "Chlamydomonas bilatus"="tomato3")) +
+  scale_color_manual(values=c("Chlamydomonas noctigama"="dodgerblue3", "Chlamydomonas bilatus"="firebrick3")) +
   theme(plot.margin=unit(c(5.5,5.5,5.5,5.5),"pt")) +
   theme(legend.position="none")
 dev.off() 
@@ -216,12 +216,12 @@ qqline(log(DataN$IR+1))
 hist(log(DataN$IR+1))
 
 # Test for homoscedasticity
-bartlett.test(log(DataB$IR+1), DataB$Iso)
-bartlett.test(log(DataN$IR+1), DataN$Iso)
+bartlett.test(log(DataB$IR+1), DataB$Genotype)
+bartlett.test(log(DataN$IR+1), DataN$Genotype)
 
 # Comparisons of means
-kruskal.test(log(DataB$IR+1), DataB$Iso)
-kruskal.test(log(DataN$IR+1), DataN$Iso)
+kruskal.test(log(DataB$IR+1), DataB$Genotype)
+kruskal.test(log(DataN$IR+1), DataN$Genotype)
 
 ### Clearance rate ###
 
@@ -237,24 +237,9 @@ qqline(log(DataN$CR+1))
 hist(log(DataN$CR+1))
 
 # Test for homoscedasticity
-bartlett.test(log(DataB$CR+1), DataB$Iso)
-bartlett.test(log(DataN$CR+1), DataN$Iso)
+bartlett.test(log(DataB$CR+1), DataB$Genotype)
+bartlett.test(log(DataN$CR+1), DataN$Genotype)
 
 # Comparisons of means
-kruskal.test(log(DataB$CR+1), DataB$Iso)
-kruskal.test(log(DataN$CR+1), DataN$Iso)
-
-
-####################################################
-### Interspecific vs intraspecific contributions ###
-####################################################
-
-# Mixed effect regressions
-Model1=lmer(IR~1 +(1|Iso), REML=T, data=Data)
-Model2=lmer(IR~Species +(1|Iso), REML=T, data=Data)
-anova(Model1,Model2)
-
-# Mixed effect regressions
-Model1=lmer(CR~1 +(1|Iso), REML=T, data=Data)
-Model2=lmer(CR~Species +(1|Iso), REML=T, data=Data)
-anova(Model1,Model2)
+kruskal.test(log(DataB$CR+1), DataB$Genotype)
+kruskal.test(log(DataN$CR+1), DataN$Genotype)
